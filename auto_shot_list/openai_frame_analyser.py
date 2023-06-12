@@ -17,9 +17,16 @@ class OpenAIFrameAnalyser:
         self.model.to(device)
 
     def _analyse_image(
-            self, frame: np.array,
+            self,
+            frame: np.array,
             question: str = None
     ):
+        """
+        Evaluates one question on given frame
+        :param frame:
+        :param question:
+        :return:
+        """
         if not question:
             prompt = None
         else:
@@ -33,5 +40,5 @@ class OpenAIFrameAnalyser:
         return generated_text
 
 
-def evaluate(self, frame: np.array):
+    def evaluate(self, frame: np.array):
 
