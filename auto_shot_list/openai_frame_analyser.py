@@ -1,6 +1,8 @@
 import numpy as np
 import torch
+import openai
 from transformers import Blip2Processor, Blip2ForConditionalGeneration
+
 
 class OpenAIFrameAnalyser:
 
@@ -16,11 +18,26 @@ class OpenAIFrameAnalyser:
         )
         self.model.to(device)
 
+        self._details_prompt = \
+            "you are an experienced filmmaker " \
+            "you need to create a shot list " \
+            "give me the list of questions to fully understand the shot based on this description " \
+            "{}" \
+            "ask no more than 5 questions only about the image elements " \
+            "return only questions separated by symbol * without any " \
+            "answer options and numerations on the beginning "
+
+        self._summary_prompt = \
+            "you are an experienced filmmaker" \
+            "use only provided information, reply only with description" \
+            "based on this information give a full comprehensive description of a shot "
+
     def _analyse_image(
-            self,
-            frame: np.array,
-            question: str = None
-    ):
+                    self,
+                    frame: np.array,
+                    question: str = None
+            ):
+
         """
         Evaluates one question on given frame
         :param frame:
@@ -39,6 +56,28 @@ class OpenAIFrameAnalyser:
         generated_text = self.processor.batch_decode(generated_ids, skip_special_tokens=True)[0].strip()
         return generated_text
 
+    def _complete_openai(self, prompt: str):
+        response = openai.ChatCompletion.create(
+            model="gpt-3.5-turbo",
+            messages=[
+                {"role": "user", "content": self._details_prompt.format(prompt)},
+            ]
+        )
+        return response.choices[0].message.content
 
     def evaluate(self, frame: np.array):
+        first_description = self._analyse_image(frame)
 
+        completion = self._complete_openai(self._details_prompt.format(first_description))
+
+        questions = completion.split("*")
+
+        frame_details = []
+        for question in questions:
+            frame_details.append(self._analyse_image(frame, question))
+
+        frame_summary = self._complete_openai(self._summary_prompt.format(
+            first_description + " " + " ".join(frame_details)
+        ))
+
+        return frame_summary
