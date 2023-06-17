@@ -19,24 +19,22 @@ class OpenAIFrameAnalyser:
         self.model.to(device)
 
         self._details_prompt = \
-            "you are an experienced filmmaker " \
-            "you need to create a shot list " \
-            "give me the list of questions to fully understand the shot based on this description " \
-            "{}" \
-            "ask no more than 5 questions only about the image elements " \
-            "return only questions separated by symbol * without any " \
-            "answer options and numerations on the beginning "
+            "Give me the list of questions to fully understand the shot based on this description {} " \
+            "If there are some characters always ask about their appearance " \
+            "ask no more than 10 questions only about the image elements " \
+            "return only questions always separated by symbol * " \
+            " without any answer options and numerations on the beginning"
 
         self._summary_prompt = \
-            "you are an experienced filmmaker" \
-            "use only provided information, reply only with description" \
-            "based on this information give a full comprehensive description of a shot {}"
+            "you are an experienced filmmaker " \
+            "do not add any additional information, reply only on given description " \
+            "based on this information summarize a full comprehensive description of a shot {}"
 
     def _analyse_image(
-                    self,
-                    frame: np.array,
-                    question: str = None
-            ):
+            self,
+            frame: np.array,
+            question: str = None
+    ):
 
         """
         Evaluates one question on given frame
