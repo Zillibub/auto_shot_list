@@ -30,7 +30,7 @@ class OpenAIFrameAnalyser:
         self._summary_prompt = \
             "you are an experienced filmmaker" \
             "use only provided information, reply only with description" \
-            "based on this information give a full comprehensive description of a shot "
+            "based on this information give a full comprehensive description of a shot {}"
 
     def _analyse_image(
                     self,
@@ -47,7 +47,7 @@ class OpenAIFrameAnalyser:
         if not question:
             prompt = None
         else:
-            prompt = f"Question: {question} Answer: "
+            prompt = f"Question: {question} Answer:"
         inputs = self.processor(
             images=frame, text=prompt, return_tensors="pt"
         ).to(self.device, torch.float16)
@@ -60,7 +60,7 @@ class OpenAIFrameAnalyser:
         response = openai.ChatCompletion.create(
             model="gpt-3.5-turbo",
             messages=[
-                {"role": "user", "content": self._details_prompt.format(prompt)},
+                {"role": "user", "content": prompt},
             ]
         )
         return response.choices[0].message.content
@@ -70,7 +70,7 @@ class OpenAIFrameAnalyser:
 
         completion = self._complete_openai(self._details_prompt.format(first_description))
 
-        questions = completion.split("*")
+        questions = [x for x in completion.split("*") if x]
 
         frame_details = []
         for question in questions:

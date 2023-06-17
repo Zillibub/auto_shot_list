@@ -1,7 +1,6 @@
+import cv2
 from scenedetect import open_video, SceneManager, ContentDetector
-
-
-def get_sce
+from auto_shot_list.openai_frame_analyser import OpenAIFrameAnalyser
 
 
 def main(
@@ -9,6 +8,13 @@ def main(
 
 ):
     video = open_video(video_path)
+
+    cap = cv2.VideoCapture(video_path)
+    cap.set(cv2.CAP_PROP_POS_FRAMES, 12818)
+
+    success, frame = cap.read()
+
+    out = OpenAIFrameAnalyser().evaluate(frame)
 
 
 if __name__ == "__main__":
