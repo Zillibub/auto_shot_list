@@ -2,3 +2,4 @@ scenedetect[opencv]==0.6.1
 json-tricks==3.17.0
 git+https://github.com/huggingface/transformers
 openai==0.27.8
+tenacity==8.2.2

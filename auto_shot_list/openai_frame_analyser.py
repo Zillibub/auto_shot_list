@@ -1,6 +1,7 @@
 import numpy as np
 import torch
 import openai
+from tenacity import retry, stop_after_attempt, wait_fixed, retry_if_exception_type
 from transformers import Blip2Processor, Blip2ForConditionalGeneration
 
 
@@ -54,6 +55,11 @@ class OpenAIFrameAnalyser:
         generated_text = self.processor.batch_decode(generated_ids, skip_special_tokens=True)[0].strip()
         return generated_text
 
+    @retry(
+        stop=stop_after_attempt(10),
+        wait=wait_fixed(0.2),
+        retry=retry_if_exception_type(openai.error.RateLimitError)
+    )
     def _complete_openai(self, prompt: str):
         response = openai.ChatCompletion.create(
             model="gpt-3.5-turbo",
