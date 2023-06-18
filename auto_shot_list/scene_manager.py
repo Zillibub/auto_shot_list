@@ -15,7 +15,7 @@ class VideoManager:
         self.video_path = video_path
 
         self.scenes = None
-        self.scenes_description = None
+        self.scenes_description = []
         self.frame_analyser = frame_analyser
 
     def detect_scenes(self):
@@ -26,16 +26,19 @@ class VideoManager:
 
         self.scenes = scene_manager.get_scene_list()
 
-    def analyse_scenes(self, num_scenes: int = None):
+    def analyse_scenes(self, num_scenes: int = None, continue_analysis: bool = False):
         if not self.scenes:
             raise ValueError("Scenes are not detected")
+
+        start = 0
+        if continue_analysis:
+            start = len(self.scenes_description)
 
         num_scenes = num_scenes or len(self.scenes)
 
         cap = cv2.VideoCapture(self.video_path)
 
-        self.scenes_description = []
-        for scene in self.scenes[:num_scenes]:
+        for scene in self.scenes[start:num_scenes]:
             self.scenes_description.append({
                 "timing": scene,
                 "description": self.describe_scene(scene, cap)

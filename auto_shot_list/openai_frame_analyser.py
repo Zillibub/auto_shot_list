@@ -58,7 +58,7 @@ class OpenAIFrameAnalyser:
     @retry(
         stop=stop_after_attempt(10),
         wait=wait_fixed(0.2),
-        retry=retry_if_exception_type(openai.error.RateLimitError)
+        # retry=retry_if_exception_type(openai.error.RateLimitError)
     )
     def _complete_openai(self, prompt: str):
         response = openai.ChatCompletion.create(
