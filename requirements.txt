@@ -5,3 +5,5 @@ openai==0.27.8
 tenacity==8.2.2
 chromadb
 tiktoken==0.4.0
+pandas
+langchain

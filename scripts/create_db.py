@@ -1,5 +1,3 @@
-import os
-import sys
 import argparse
 import json_tricks
 from pathlib import Path
@@ -9,7 +7,7 @@ from langchain.embeddings import OpenAIEmbeddings, LlamaCppEmbeddings
 from langchain.vectorstores import Chroma
 
 
-def process_shots(shot_list_dir, result_dir):
+def process_shots(shot_list_dir: Path, result_dir: Path):
     ids = []
     timings_db = []
     texts = []
@@ -36,6 +34,7 @@ def process_shots(shot_list_dir, result_dir):
     lang_db.mkdir(exist_ok=True)
     embeddings = OpenAIEmbeddings()
     vector_store = Chroma.from_texts(texts, embeddings, ids=ids, persist_directory=str(lang_db))
+    vector_store.persist()
 
 
 if __name__ == '__main__':
