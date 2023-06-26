@@ -8,16 +8,22 @@ from langchain.vectorstores import Chroma
 
 
 def process_shots(shot_list_dir: Path, result_dir: Path):
-    ids = []
     timings_db = []
     texts = []
+    metadatas = []
 
-    for shot_list_path in shot_list_dir.iterdir():
+    for shot_list_path in output_dir.iterdir():
         with open(shot_list_path, "r") as f:
             data = json_tricks.load(f)
         for shot in data.scenes_description:
             shot_id = str(uuid1())
-            ids.append(shot_id)
+            metadatas.append({
+                "path": shot_list_path,
+                "frame_start": shot["timing"][0].frame_num,
+                "frame_end": shot["timing"][1].frame_num,
+                "duration": shot["timing"][1].get_seconds() - shot["timing"][0].get_seconds()
+
+            })
             duration = shot["timing"][1].get_seconds() - shot["timing"][0].get_seconds()
             timings_db.append({
                 "id": shot_id,
@@ -33,7 +39,7 @@ def process_shots(shot_list_dir: Path, result_dir: Path):
     lang_db = result_dir / "lang_db"
     lang_db.mkdir(exist_ok=True)
     embeddings = OpenAIEmbeddings()
-    vector_store = Chroma.from_texts(texts, embeddings, ids=ids, persist_directory=str(lang_db))
+    vector_store = Chroma.from_texts(texts, embeddings, metadatas=metadatas, persist_directory=str(lang_db))
     vector_store.persist()
 
 
