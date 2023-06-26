@@ -6,13 +6,22 @@ The Auto Shot List library is designed to create shot lists using LLM models. It
 
 Here's an example of how to use the Auto Shot List library:
 
-```
-from auto_shot_list import create_shot_list
-from video_file import VideoFile
+```python
+from pathlib import Path
+import json_tricks
+from auto_shot_list.openai_frame_analyser import OpenAIFrameAnalyser
+from auto_shot_list.scene_manager import VideoManager
 
-video_file = VideoFile('example.mp4')
-shot_list = create_shot_list(video_file)
-print(shot_list)
+video_path = Path("path/to/your/video.mkv")
+output_dir = Path("path/to/folder/with/results")
+analyser = OpenAIFrameAnalyser()
+
+video_manager = VideoManager(str(video_path), frame_analyser=analyser)
+video_manager.detect_scenes()
+video_manager.analyse_scenes()
+video_manager.frame_analyser = None
+with open(output_dir / (video_path.stem + ".json"), "w") as f: 
+    json_tricks.dump(video_manager, f)
 ```
 
 This will generate a shot list using LLM models. The output will be a list of shots in chronological order. Each shot is represented as a dictionary with the start and end times of the shot.
