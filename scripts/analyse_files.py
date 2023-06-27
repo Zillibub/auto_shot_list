@@ -1,8 +1,21 @@
 import argparse
 import json_tricks
+import logging
+from typing import List
 from pathlib import Path
 from auto_shot_list.openai_frame_analyser import OpenAIFrameAnalyser
 from auto_shot_list.scene_manager import VideoManager
+
+
+def get_video_files(directory : Path) ->List[Path]:
+    video_extensions = ['.mp4', '.mov', '.avi', '.mkv', '.wmv']
+    video_files = []
+
+    for file in directory_path.glob('**/*'):
+        if file.suffix.lower() in video_extensions:
+            video_files.append(file)
+
+    return video_files
 
 
 def analyse_files(videos_dir: Path, output_dir: Path):
@@ -21,9 +34,13 @@ def analyse_files(videos_dir: Path, output_dir: Path):
     if not output_dir.exists():
         raise ValueError(f"Output directory does not exists: {videos_dir}")
 
+    video_paths = get_video_files(videos_dir)
 
+    if len(video_files) == 0:
+        raise ValueError(f"No videos found in directory {videos_dir}")
+    logging.info(f"Found {len(video_paths)} files. Starting shot list extraction")
 
-    for video_path in videos_dir.iterdir():
+    for video_path in video_paths:
         video_manager = VideoManager(str(video_path), frame_analyser=analyser)
         video_manager.detect_scenes()
         video_manager.analyse_scenes()
