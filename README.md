@@ -4,7 +4,9 @@ The Auto Shot List library is designed to create shot lists using LLM models. It
 
 ## Usage
 
-Here's an example of how to use the Auto Shot List library:
+The simpliest way to create a shot list is to use a `scripts/analyse_files.py` script.
+
+Alternatively, you can call everythg from you code. 
 
 ```python
 from pathlib import Path
@@ -25,6 +27,20 @@ with open(output_dir / (video_path.stem + ".json"), "w") as f:
 ```
 
 This will generate a shot list using LLM models. The output will be a list of shots in chronological order. Each shot is represented as a dictionary with the start and end times of the shot.
+
+
+## Under the hood. 
+
+The library uses a GPT LLM model as an arbiter and a summarizer and a `blip2-opt` model to extract 
+information from the image
+
+Workflow: 
+1. Extract all shots from the video
+2. Get the initial shot information with blip2 model
+3. Use GPT to generate a list of additional questions about the shot
+4. Retrieve answers for this questions using blip2 on the same shot
+5. Summarize shot into with GPT
+
 
 **Contributing**
 
