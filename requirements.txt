@@ -3,7 +3,7 @@ json-tricks==3.17.0
 git+https://github.com/huggingface/transformers
 openai==0.27.8
 tenacity==8.2.2
-chromadb
+chromadb==0.3.26
 tiktoken==0.4.0
-pandas
-langchain
+pandas==2.0.3
+langchain==0.0.220
