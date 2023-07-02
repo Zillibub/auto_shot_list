@@ -8,11 +8,17 @@ from langchain.vectorstores import Chroma
 
 
 def process_shots(shot_list_dir: Path, result_dir: Path):
+
+    if not shot_list_dir.exists() or not shot_list_dir.is_dir():
+        raise ValueError(f"Invalid shot list directory {shot_list_dir}")
+
+    result_dir.mkdir(exist_ok=True)
+
     timings_db = []
     texts = []
     metadatas = []
 
-    for shot_list_path in output_dir.iterdir():
+    for shot_list_path in shot_list_dir.iterdir():
         with open(shot_list_path, "r") as f:
             data = json_tricks.load(f)
         for shot in data.scenes_description:
