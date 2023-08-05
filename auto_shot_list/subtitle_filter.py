@@ -2,11 +2,11 @@ import ass
 from itertools import chain
 from datetime import timedelta
 from pydantic import BaseModel
-from typing import List
+from typing import List, Union
 from pathlib import Path
 from enum import Enum
 
-import json_tricks
+import json
 
 
 class HowEnum(str, Enum):
@@ -30,23 +30,24 @@ class Event(BaseModel):
 
 class SkipSection(BaseModel):
     name: str
-    events: List[Event or None]
+    events: List[Union[Event,None]]
+    offset: int = 0
 
     def is_within(self, shot_time: timedelta):
         if len(self.events) > 2:
             raise ValueError("Too much events")
 
-        if self.events[0]:
-            time_start = self.events[0]
+        if self.events[0] and self.events[0].event_time:
+            time_start = self.events[0].event_time
         else:
-            time_start = shot_time - timedelta(seconds=0)
+            time_start = shot_time + timedelta(seconds=1)
 
-        if self.events[1]:
-            time_stop = self.events[1]
+        if self.events[1] and self.events[1].event_time:
+            time_stop = self.events[1].event_time
         else:
-            time_stop = shot_time + timedelta(seconds=0)
+            time_stop = shot_time - timedelta(seconds=1)
 
-        return time_start <= shot_time <= time_stop
+        return time_start - timedelta(seconds=self.offset) <= shot_time <= time_stop + timedelta(seconds=self.offset)
 
 
 class SubtitleFilter:
@@ -60,14 +61,14 @@ class SubtitleFilter:
         if not self.filter_rules_path.exists():
             raise ValueError(f"Invalid filter rules path {self.filter_rules_path}")
 
-        with open(self.filter_rules_path, "r") as f:
-            data = json_tricks.load(f)
+        with open(self.filter_rules_path, "r", encoding='utf-8') as f:
+            data = json.load(f)
         self.filter_rules = [SkipSection(**item) for item in data]
 
         with open(self.subtitles_path, encoding='utf_8_sig') as f:
             self.subtitles = ass.parse(f)
 
-        search_events = list(chain(*[x.events for x in self.filter_rules]))
+        search_events = [event for event in chain(*[x.events for x in self.filter_rules]) if event]
         self._evaluate_search_events(search_events)
 
     def _evaluate_search_events(self, search_events):
@@ -80,11 +81,14 @@ class SubtitleFilter:
             for se in search_events:
                 se.evaluate(event)
 
-    def is_within_any(self, shot_time: timedelta) -> bool:
+    def is_within_any(self, scene_start: timedelta, scene_end: timedelta) -> bool:
         """
         Validated that given time is within any given sections
-        :param shot_time:
+        :param scene_start:
+        :param scene_end:
         :return:
         """
-        out = [filter_rule.is_within(shot_time) for filter_rule in self.filter_rules]
+        out = [filter_rule.is_within(scene_start) for filter_rule in self.filter_rules] + [
+            filter_rule.is_within(scene_end) for filter_rule in self.filter_rules
+        ]
         return any(out)

@@ -54,6 +54,8 @@ def analyse_files(videos_dir: Path, output_dir: Path, subtitles_dir: Path = None
         subtitles_path = None
         if subtitles_dir:
             subtitles_path = subtitles_dir / (video_path.stem + ".ass")
+            if not subtitles_path.exists():
+                raise ValueError("Subtitle path not found")
         video_manager = VideoManager(
             str(video_path), frame_analyser=analyser, subtitle_path=subtitles_path, subtitle_filter_path=subtitles_rules
         )
@@ -75,7 +77,9 @@ if __name__ == "__main__":
 
     args = parser.parse_args()
 
-    videos_directory = Path(args.videos_dir)
-    output_directory = Path(args.output_dir)
-
-    analyse_files(videos_directory, output_directory)
+    analyse_files(
+        Path(args.videos_dir),
+        Path(args.output_dir),
+        subtitles_dir=Path(args.subtitles_dir),
+        subtitles_rules=Path(args.subtitles_rules)
+    )

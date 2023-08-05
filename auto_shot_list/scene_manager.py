@@ -1,6 +1,7 @@
 import cv2
 import logging
 from pathlib import Path
+from datetime import timedelta
 
 from scenedetect import open_video, SceneManager, ContentDetector
 from auto_shot_list.openai_frame_analyser import OpenAIFrameAnalyser
@@ -50,7 +51,9 @@ class VideoManager:
 
         for scene in self.scenes[start:num_scenes]:
             if self.subtitle_filter:
-                if self.subtitle_filter.is_within_any(scene.timedelta):
+                scene_start = timedelta(seconds=scene[0].get_seconds())
+                scene_end = timedelta(seconds=scene[1].get_seconds())
+                if self.subtitle_filter.is_within_any(scene_start, scene_end):
                     continue
 
             self.scenes_description.append({
