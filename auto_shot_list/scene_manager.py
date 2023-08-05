@@ -10,9 +10,12 @@ class VideoManager:
     def __init__(
             self,
             video_path: str,
-            frame_analyser: OpenAIFrameAnalyser
+            frame_analyser: OpenAIFrameAnalyser,
+            subtitle_path: str = None,
+            subtitle_filter_path: str = None,
     ):
         self.video_path = video_path
+        self.subtitle_path = subtitle_path
 
         self.scenes = None
         self.scenes_description = []
