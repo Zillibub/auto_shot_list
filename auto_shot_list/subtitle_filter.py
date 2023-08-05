@@ -1,6 +1,6 @@
 import ass
 from itertools import chain
-from datetime import datetime
+from datetime import timedelta
 from pydantic import BaseModel
 from typing import List
 from pathlib import Path
@@ -17,7 +17,7 @@ class HowEnum(str, Enum):
 class Event(BaseModel):
     text: str
     how: HowEnum
-    event_time: datetime = None
+    event_time: timedelta = None
 
     def evaluate(self, event):
         if self.text not in event.text:
@@ -30,7 +30,23 @@ class Event(BaseModel):
 
 class SkipSection(BaseModel):
     name: str
-    events: List[Event]
+    events: List[Event or None]
+
+    def is_within(self, shot_time: timedelta):
+        if len(self.events) > 2:
+            raise ValueError("Too much events")
+
+        if self.events[0]:
+            time_start = self.events[0]
+        else:
+            time_start = shot_time - timedelta(seconds=0)
+
+        if self.events[1]:
+            time_stop = self.events[1]
+        else:
+            time_stop = shot_time + timedelta(seconds=0)
+
+        return time_start <= shot_time <= time_stop
 
 
 class SubtitleFilter:
@@ -63,3 +79,12 @@ class SubtitleFilter:
         for event in self.subtitles.sections["Events"]:
             for se in search_events:
                 se.evaluate(event)
+
+    def is_within_any(self, shot_time: timedelta) -> bool:
+        """
+        Validated that given time is within any given sections
+        :param shot_time:
+        :return:
+        """
+        out = [filter_rule.is_within(shot_time) for filter_rule in self.filter_rules]
+        return any(out)
