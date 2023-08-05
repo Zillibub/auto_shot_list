@@ -1,8 +1,10 @@
 import cv2
 import logging
+from pathlib import Path
 
 from scenedetect import open_video, SceneManager, ContentDetector
 from auto_shot_list.openai_frame_analyser import OpenAIFrameAnalyser
+from auto_shot_list.subtitle_filter import SubtitleFilter
 
 
 class VideoManager:
@@ -15,11 +17,16 @@ class VideoManager:
             subtitle_filter_path: str = None,
     ):
         self.video_path = video_path
-        self.subtitle_path = subtitle_path
 
         self.scenes = None
         self.scenes_description = []
         self.frame_analyser = frame_analyser
+
+        if subtitle_filter_path:
+            if not subtitle_path:
+                raise ValueError("Subtitle filter path is provided but subtitle path is not")
+            self.subtitle_filter = SubtitleFilter(Path(subtitle_filter_path), Path(subtitle_path))
+            logging.info(f"Initialised subtitle scenes filter")
 
     def detect_scenes(self):
         video = open_video(self.video_path)
@@ -42,6 +49,10 @@ class VideoManager:
         cap = cv2.VideoCapture(self.video_path)
 
         for scene in self.scenes[start:num_scenes]:
+            if self.subtitle_filter:
+                if self.subtitle_filter.is_within_any(scene.timedelta):
+                    continue
+
             self.scenes_description.append({
                 "timing": scene,
                 "description": self.describe_scene(scene, cap)
@@ -61,8 +72,3 @@ class VideoManager:
         description = self.frame_analyser.evaluate(frame)
 
         return description
-
-
-
-
-
