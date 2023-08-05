@@ -7,20 +7,22 @@ from auto_shot_list.openai_frame_analyser import OpenAIFrameAnalyser
 from auto_shot_list.scene_manager import VideoManager
 
 
-def get_video_files(directory : Path) ->List[Path]:
+def get_video_files(directory: Path) -> List[Path]:
     video_extensions = ['.mp4', '.mov', '.avi', '.mkv', '.wmv']
     video_files = []
 
-    for file in directory_path.glob('**/*'):
+    for file in directory.glob('**/*'):
         if file.suffix.lower() in video_extensions:
             video_files.append(file)
 
     return video_files
 
 
-def analyse_files(videos_dir: Path, output_dir: Path):
+def analyse_files(videos_dir: Path, output_dir: Path, subtitles_dir: Path = None, subtitles_rules: Path = None):
     """
     Analyses all files in given folder
+    :param subtitles_dir:
+    :param subtitles_rules:
     :param videos_dir: path to a directory with video files
     :param output_dir: path to a directory to store created shot lists
     :return:
@@ -34,14 +36,27 @@ def analyse_files(videos_dir: Path, output_dir: Path):
     if not output_dir.exists():
         raise ValueError(f"Output directory does not exists: {videos_dir}")
 
+    if subtitles_dir and not subtitles_dir.exists():
+        raise ValueError(f"Subtitles directory does not exists: {subtitles_dir}")
+
+    if subtitles_rules and not subtitles_rules.exists():
+        raise ValueError(f"Subtitles rules file does not exists: {subtitles_rules}")
+
     video_paths = get_video_files(videos_dir)
 
-    if len(video_files) == 0:
+    if len(video_paths) == 0:
         raise ValueError(f"No videos found in directory {videos_dir}")
     logging.info(f"Found {len(video_paths)} files. Starting shot list extraction")
 
     for video_path in video_paths:
-        video_manager = VideoManager(str(video_path), frame_analyser=analyser)
+        logging.info(f"Processing {video_path}")
+
+        subtitles_path = None
+        if subtitles_dir:
+            subtitles_path = subtitles_dir / (video_path.stem + ".ass")
+        video_manager = VideoManager(
+            str(video_path), frame_analyser=analyser, subtitle_path=subtitles_path, subtitle_filter_path=subtitles_rules
+        )
         video_manager.detect_scenes()
         video_manager.analyse_scenes()
         video_manager.frame_analyser = None
@@ -51,8 +66,13 @@ def analyse_files(videos_dir: Path, output_dir: Path):
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser()
-    parser.add_argument('videos_dir', type=str, help='path to the directory containing the videos')
-    parser.add_argument('output_dir', type=str, help='path where the output json files will be saved')
+    parser.add_argument("-v", '--videos_dir', type=str, help='path to the directory containing the videos')
+    parser.add_argument("-o", '--output_dir', type=str, help='path where the output json files will be saved')
+    parser.add_argument("-s", '--subtitles_dir', type=str, help='path to the directory containing the subtitles',
+                        default=None)
+    parser.add_argument("-sr", '--subtitles_rules', type=str, help='path to the rules file for the subtitles',
+                        default=None)
+
     args = parser.parse_args()
 
     videos_directory = Path(args.videos_dir)

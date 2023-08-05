@@ -13,8 +13,8 @@ class VideoManager:
             self,
             video_path: str,
             frame_analyser: OpenAIFrameAnalyser,
-            subtitle_path: str = None,
-            subtitle_filter_path: str = None,
+            subtitle_path: Path = None,
+            subtitle_filter_path: Path = None,
     ):
         self.video_path = video_path
 
