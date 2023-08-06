@@ -62,6 +62,7 @@ def analyse_files(videos_dir: Path, output_dir: Path, subtitles_dir: Path = None
         video_manager.detect_scenes()
         video_manager.analyse_scenes()
         video_manager.frame_analyser = None
+        video_manager.subtitle_filter = None
         with open(output_dir / (video_path.stem + ".json"), "w") as f:
             json_tricks.dump(video_manager, f)
 
